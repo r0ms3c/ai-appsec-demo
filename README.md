@@ -207,7 +207,6 @@ New to this repo? Work through the sections in order:
 
 Built as a learning project and portfolio piece demonstrating how Claude Code fits into a professional security engineering workflow. Every design decision reflects real security engineering judgment — not AI hype.
 
-Feedback and connections welcome on [LinkedIn](#).
 
 ---
 
