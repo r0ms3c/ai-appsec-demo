@@ -19,19 +19,20 @@ State explicitly:
 
 ## Step 2: Automated scan (if tools available)
 
-Run available scanners on the target:
+Run available scanners on the target. Use these Windows-compatible commands:
 
-```bash
-# Bandit — Python SAST
-bandit -r app/ -f json 2>/dev/null || bandit -r app/
+```
+# Bandit — Python SAST (install: pip install bandit)
+bandit -r app/ -f txt
 
-# Semgrep — pattern-based
-semgrep --config=p/python --config=p/owasp-top-ten app/ --json 2>/dev/null || echo "semgrep not available"
+# Semgrep — pattern-based (install: pip install semgrep)
+semgrep --config=p/python --config=p/owasp-top-ten app/ --text
 
-# Check dependencies
-pip-audit -r app/requirements.txt 2>/dev/null || safety check -r app/requirements.txt 2>/dev/null || echo "dep scanner not available"
+# Dependency CVE scan (install: pip install pip-audit)
+pip-audit -r app/requirements.txt
 ```
 
+If a tool is not installed, skip it and note it as missing.
 Summarize tool output before proceeding to manual review.
 
 ## Step 3: Manual review by OWASP category
