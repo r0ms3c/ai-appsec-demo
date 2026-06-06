@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# App runtime artifacts
+app/uploads/
+app/vulnbank.db
+*.db
+
+# Claude audit log (contains session history)
+.claude/audit.log
+.claude/session-*.log
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/

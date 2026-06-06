@@ -1,0 +1,139 @@
+name: 🔐 AI Security Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target to scan (e.g. app/, app/auth.py, or 'full')"
+        required: false
+        default: "app/"
+      review_type:
+        description: "Type of review to run"
+        required: true
+        type: choice
+        options:
+          - full-audit
+          - sast-only
+          - dependency-check
+          - threat-model
+      severity_threshold:
+        description: "Minimum severity to report"
+        required: false
+        default: "medium"
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+
+jobs:
+  sast-scan:
+    name: 🔍 SAST Scan (Bandit + Semgrep)
+    runs-on: ubuntu-latest
+    if: ${{ inputs.review_type == 'full-audit' || inputs.review_type == 'sast-only' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SAST tools
+        run: |
+          pip install bandit semgrep
+
+      - name: Run Bandit
+        run: |
+          echo "## 🔍 Bandit SAST Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          bandit -r ${{ inputs.target }} \
+            -l \
+            --severity-level ${{ inputs.severity_threshold }} \
+            -f txt 2>&1 | tee bandit-results.txt || true
+          cat bandit-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Run Semgrep
+        run: |
+          echo "## 🔍 Semgrep Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          semgrep \
+            --config=p/python \
+            --config=p/owasp-top-ten \
+            --config=p/security-audit \
+            --severity WARNING \
+            --text \
+            ${{ inputs.target }} 2>&1 | tee semgrep-results.txt || true
+          cat semgrep-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Upload SAST results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-results
+          path: |
+            bandit-results.txt
+            semgrep-results.txt
+
+  dependency-scan:
+    name: 📦 Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    if: ${{ inputs.review_type == 'full-audit' || inputs.review_type == 'dependency-check' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        run: |
+          echo "## 📦 Dependency CVE Scan" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          pip-audit -r app/requirements.txt \
+            --format=columns \
+            --progress-spinner=off 2>&1 | tee dep-results.txt || true
+          cat dep-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Upload dependency results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-results
+          path: dep-results.txt
+
+  summary:
+    name: 📊 Security Summary
+    runs-on: ubuntu-latest
+    needs: [sast-scan, dependency-scan]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# 🔐 Security Review Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | \`${{ inputs.target }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Review type | ${{ inputs.review_type }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Severity threshold | ${{ inputs.severity_threshold }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Triggered by | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⬆️ See job results above for detailed findings." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_This workflow is part of the AI AppSec Demo — demonstrating Claude Code + DevSecOps integration_" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "semgrep": {
+      "command": "python3",
+      "args": ["-m", "mcp_semgrep"],
+      "env": {
+        "SEMGREP_RULES": "p/python p/owasp-top-ten p/security-audit",
+        "SEMGREP_TARGET": "./app"
+      }
+    },
+    "bandit": {
+      "command": "python3",
+      "args": ["-m", "mcp_bandit"],
+      "env": {
+        "BANDIT_TARGET": "./app"
+      }
+    }
+  },
+  "_setup": {
+    "install": ["pip install semgrep bandit pip-audit"],
+    "fallback": "Use hooks in .claude/settings.json which call tools via CLI directly",
+    "snyk_upgrade": "Replace entries with Snyk MCP config from https://docs.snyk.io when available"
+  }
+}

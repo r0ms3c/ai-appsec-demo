@@ -1,0 +1,19 @@
+# VulnBank API Dependencies
+# WARNING: Versions are INTENTIONALLY outdated and vulnerable.
+# DO NOT use in production.
+#
+# PyJWT==1.7.1      — CVE-2022-29217: accepts "none" algorithm
+# requests==2.18.0  — CVE-2018-18074: credential leak on redirect
+# Pillow==8.3.1     — CVE-2021-34552: buffer overflow
+# cryptography==2.1.4 — multiple CVEs including padding oracle
+
+fastapi==0.68.0
+uvicorn==0.15.0
+PyJWT==1.7.1
+requests==2.18.0
+Pillow==8.3.1
+cryptography==2.1.4
+sqlalchemy==1.3.0
+pydantic==1.8.2
+python-multipart==0.0.5
+aiofiles==0.7.0
